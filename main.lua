@@ -4,6 +4,10 @@ enemies_controller.enemies = {}
 enemies_controller.image = love.graphics.newImage('enemy.png')
 spawntimer = 2
 
+
+
+
+-- check if the enemies is hit by a bullet
 function checkCollisons(enemies, bullets)
   for i, e in ipairs(enemies) do
     for _, b in pairs(bullets) do
@@ -14,7 +18,20 @@ function checkCollisons(enemies, bullets)
   end
 end
 
+
+-- load elements before game start
 function love.load()
+  local music = love.audio.newSource('backtrack.mp3')
+  music:setLooping(true)
+  love.audio.play(music)
+ 
+  game_over = false
+
+  game_over_img = love.graphics.newImage('gameover.jpg')
+  
+  background_image = love.graphics.newImage('Background.jpg')
+  
+  
   player = {}
   player.x = 0
   player.y = 500
@@ -24,6 +41,7 @@ function love.load()
   player.image = love.graphics.newImage('spaceship.png')
   player.fire_sound = love.audio.newSource('laser.mp3')
   player.fire = function()
+    
     
     if player.cooldown <= 0 then
       love.audio.play(player.fire_sound)
@@ -39,7 +57,7 @@ function love.load()
   
 end
 
-
+-- spawn enemy with certain number and speed
 function enemies_controller:spawnEnemy(x, y)
   enemy = {}
   enemy.x = x
@@ -48,7 +66,7 @@ function enemies_controller:spawnEnemy(x, y)
   enemy.width = 100
   enemy.bullets = {}
   enemy.cooldown = 15
-  enemy.speed = 10
+  enemy.speed = 13
   table.insert(self.enemies, enemy)
 end
 
@@ -66,6 +84,7 @@ end
 
 
 function love.update(dt)
+  
   player.cooldown = player.cooldown - 1
   
   if love.keyboard.isDown("right") then
@@ -84,11 +103,17 @@ function love.update(dt)
     b.y = b.y - 10
   end
 
+  
+
   for _,e in pairs(enemies_controller.enemies) do
+    -- check if enemies reached the end of the screen 
+    if e.y >= love.graphics.getHeight() then
+      game_over = true
+    end
     e.y = e.y + 1
   end
 
-  
+  --spawn enemies at a certain rate
   spawntimer = spawntimer - dt
   if spawntimer <= 0 then
     enemies_controller:spawnEnemy(love.math.random(500), 0)
@@ -102,6 +127,19 @@ end
 
 
 function love.draw()
+  
+  if game_over then
+    
+    love.graphics.draw(game_over_img)
+    love.audio.stop()
+    return
+  elseif game_win then
+    love.graphics.print("You Won!")
+  end
+  
+  
+  love.graphics.draw(background_image)
+  
   love.graphics.setColor(255, 255, 255)
   love.graphics.draw(player.image, player.x, player.y, 0, 0.5)
   
